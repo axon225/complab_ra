@@ -1,0 +1,218 @@
+float t;
+float angle =0;
+int NUM_LINES = 380;
+float v1 =0.4;
+float v2;
+boolean increment = false;
+float fator =0.00001;
+
+int numDataPoints = 50000;
+int dataIndex = 1;
+String[] dataStrings = new String[numDataPoints];
+
+import processing.serial.*;
+
+float[] portValues = new float[8];
+
+String inString; 
+
+Serial myPort;
+
+void setup(){
+background(20);
+size(500,500);
+v1 = random(0.4)+0.2;
+smooth(2);
+
+myPort = new Serial(this, "/dev/cu.usbmodem1411", 9600);
+
+for(int i = 0; i<8; i++)
+  {
+    portValues[i] = 0; 
+  }
+  dataStrings[0] = "x,y,z,leftButton,rightButton,lightSensor,soundSensor,tempSensor";
+
+}
+
+String buildDataString(float[] v) {
+  String result = "";
+  for(int i = 0; i<v.length-1; i++) {
+   result += str(v[i]) + ","; 
+  }
+  result += str(v[7]);
+  return result;
+}
+
+
+void draw(){
+  background(0);
+  angle+= 0.01;
+  stroke(255,200);
+   
+     float x = map(portValues[1],-10,10,0,width);
+     float y = map(portValues[0],-10,10,0,height);
+    portValues[3] = portValues[3];
+   // this if statement makes sure that Processing is actually
+   // reading data from the Circuit Playground BEFORE it runs the function
+   // processSensorValues()  
+  if (inString != null) {
+    portValues = processSensorValues(inString); // get data
+    // manage data points
+    dataIndex++;
+    if(dataIndex > numDataPoints - 1) {
+     dataIndex = 1; 
+    }
+    dataStrings[dataIndex] = buildDataString(portValues);
+    saveStrings("values.csv",dataStrings);}
+  
+ 
+  translate(width/2-40, height/2);
+ rotate(sin(angle));
+  
+  for(int i=1; i < NUM_LINES; i++){
+   if (x > 0)  
+
+ //if the x value on the arduino accelerometer is
+//greater than 0, then the width of the dots is
+//equal to the x value devided by 50. if the x 
+//value  is less than 0(negative), it would normally
+//cause an error, but I made it so that it ues the
+//negative x, which in that case would be positive.
+
+ { strokeWeight(x/50);}
+   if(x < 0)
+   {strokeWeight(-x/50);}
+   
+  point(x(t+i), y(t+i));
+    point(x2(t+i), y2(t+i));
+
+  if (y > 0)
+{strokeWeight (5); }
+  if (y < 0) 
+{strokeWeight (1);}
+strokeWeight (0);
+   // println(portValues[3]);
+    
+    
+    line(x(t+i),y(t+i),x2(t+i),y2(t+i));}
+  //controls how fast it spins
+  t += y/4000;
+ 
+ if(increment)    v1+=fator;
+ if (portValues[4] == 1) {
+increment = true;
+         fator = -0.00002;}
+  else if (portValues[3] == 1) {
+increment = true;
+      fator = 0.00002;}
+      else 
+      {increment = true;
+      fator = 0;}}
+
+ float[] processSensorValues(String valString) {
+  
+  String[] temp = {"0", "0", "0", "0", "0", "0", "0", "0"};
+  
+  temp = split(valString,"\t");
+  
+  if(temp == null) {
+    for(int i = 0; i<8; i++) {
+      temp[i] = "0"; 
+    }
+  }
+  
+  float[] vals = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  for(int i = 0; i<8; i++)
+  {
+    if(temp != null) 
+    {
+      vals[i] = float(temp[i]); 
+    }
+    
+    else
+    {
+      vals[i] = 0; 
+    }
+    
+  }
+  return vals;
+}
+
+// read new data from the Circuit Playground
+void serialEvent(Serial p) { 
+  inString = myPort.readStringUntil(10);  
+}  
+  
+  
+
+//if you press the mouse, it randomizes the pattern.
+void mousePressed() {
+v1 = random(0.4)+0.2;
+}
+
+
+//void keyReleased(){
+
+//increment = false;
+//}
+
+
+void keyPressed() {
+
+//if you press the spacebar, it does the same as the mouse.
+  if(key == ' '){
+   v1 = random(0.4)+0.2;
+  }
+
+  
+  //if you press the left arrow key, it rotates all the little sticks that make up the pattern around an axis.
+//         if (key == LEFT) {
+//increment = true;
+//         fator = -0.00002;}
+  //if you press the right arrow key, it rotates them the other way. 
+//    else if (key == RIGHT) {
+//increment = true;
+//      fator = 0.00002;}
+
+    //if you press the Up key, it increases the amount of lines, changing the pattern
+     if (keyCode == UP) {
+    //if you press the Down key, it decreases the amount of lines.
+         NUM_LINES+=5;
+         println("nlines "+NUM_LINES);
+    } else if (keyCode == DOWN) {
+
+      NUM_LINES-=5;
+    }  
+     
+     
+     
+     
+}
+
+
+
+float x(float t){
+
+return sin(t/10)*100 + cos(t/v1)*100;
+}
+
+
+float y(float t){
+
+return cos(t/10)*100 + sin(t/v1)*100;
+}
+
+
+
+
+
+float x2(float t){
+
+return sin(t/10)*10 + cos(t/v1)*100;
+}
+
+
+float y2(float t){
+
+return cos(t/10)*10 + sin(t/v1)*100;
+}
