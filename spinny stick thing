@@ -17,13 +17,13 @@ float[] portValues = new float[8];
 String inString; 
 
 Serial myPort;
-
+//makes the background.
 void setup(){
 background(20);
 size(500,500);
 v1 = random(0.4)+0.2;
 smooth(2);
-
+//arduino port
 myPort = new Serial(this, "/dev/cu.usbmodem1411", 9600);
 
 for(int i = 0; i<8; i++)
@@ -48,10 +48,11 @@ void draw(){
   background(0);
   angle+= 0.01;
   stroke(255,200);
-   
+//importing sensor values for x & y   
      float x = map(portValues[1],-10,10,0,width);
      float y = map(portValues[0],-10,10,0,height);
-    portValues[3] = portValues[3];
+//importing sensor value for the right button 
+ portValues[3] = portValues[3];
    // this if statement makes sure that Processing is actually
    // reading data from the Circuit Playground BEFORE it runs the function
    // processSensorValues()  
@@ -95,9 +96,14 @@ strokeWeight (0);
     
     
     line(x(t+i),y(t+i),x2(t+i),y2(t+i));}
-  //controls how fast it spins
+  //controls how fast it spins. I had to 
+  //make it y/4000 because otherwise it would
+  //constantly be spinning super fast.
   t += y/4000;
  
+ 
+ //if the left button is pressed, it turns the sticks to the left, and if
+ //the right button is pressed, it turns them to the right.
  if(increment)    v1+=fator;
  if (portValues[4] == 1) {
 increment = true;
@@ -108,35 +114,6 @@ increment = true;
       else 
       {increment = true;
       fator = 0;}}
-
- float[] processSensorValues(String valString) {
-  
-  String[] temp = {"0", "0", "0", "0", "0", "0", "0", "0"};
-  
-  temp = split(valString,"\t");
-  
-  if(temp == null) {
-    for(int i = 0; i<8; i++) {
-      temp[i] = "0"; 
-    }
-  }
-  
-  float[] vals = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  for(int i = 0; i<8; i++)
-  {
-    if(temp != null) 
-    {
-      vals[i] = float(temp[i]); 
-    }
-    
-    else
-    {
-      vals[i] = 0; 
-    }
-    
-  }
-  return vals;
-}
 
 // read new data from the Circuit Playground
 void serialEvent(Serial p) { 
@@ -164,15 +141,6 @@ void keyPressed() {
    v1 = random(0.4)+0.2;
   }
 
-  
-  //if you press the left arrow key, it rotates all the little sticks that make up the pattern around an axis.
-//         if (key == LEFT) {
-//increment = true;
-//         fator = -0.00002;}
-  //if you press the right arrow key, it rotates them the other way. 
-//    else if (key == RIGHT) {
-//increment = true;
-//      fator = 0.00002;}
 
     //if you press the Up key, it increases the amount of lines, changing the pattern
      if (keyCode == UP) {
